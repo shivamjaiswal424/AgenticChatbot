@@ -23,3 +23,33 @@ class DisplayResultStreamlit:
                             st.write(user_message)
                         with st.chat_message("assistant"):
                             st.write(value["messages"].content)
+        elif usecase =="Chatbot with Web":
+            initial_state={"messages":[user_message]}
+            res=graph.invoke(initial_state)
+            for message in res["messages"]:
+                if type(message) == AIMessage and message.content:
+                    with st.chat_message("assistant"):
+                        st.write(message.content)
+                elif type(message) == HumanMessage:
+                    with st.chat_message("user"):
+                        st.write(message.content)
+                elif type(message) == ToolMessage:
+                    with st.chat_message("ai"):
+                        st.write("Tool Call Start")
+                        st.write(message.content)
+                        st.write("Tool Call End")
+
+        elif usecase=="AI News":
+            frequency=self.user_message
+            with st.spinner("Fetching ans summarizing news... "):
+                result=graph.invoke({"messages": [HumanMessage(content=frequency)]})
+                try:
+                    AI_NEWS_PATH=f"./AINEWS/{frequency.lower()}_summary.md"
+                    with open(AI_NEWS_PATH,"r") as file:
+                        markdown_content=file.read()
+
+                    st.markdown(markdown_content,unsafe_allow_html=True)
+                except FileNotFoundError:
+                    st.error(f"News Not Generated or File not found: {AI_NEWS_PATH}")
+                except Exception as e:
+                    st.error(f"An error occurred: {str(e)}")
