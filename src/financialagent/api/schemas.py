@@ -1,5 +1,6 @@
 
 from pydantic import BaseModel,field_validator
+from typing import Optional
 
 class AnalyseRequest(BaseModel):
     ticker:str
@@ -30,3 +31,5 @@ class AnalyseResponse(BaseModel):
     ticker:str
     report:str
     sentiment:str
+    price_data: dict
+    analysis: str

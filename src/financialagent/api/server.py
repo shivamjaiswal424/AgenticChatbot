@@ -3,6 +3,9 @@ from fastapi import FastAPI,HTTPException
 from src.financialagent.api.schemas import AnalyseRequest,AnalyseResponse
 from src.financialagent.graph.graph_builder import GraphBuilder
 from src.financialagent.LLMs.groqllm import GroqLLM
+from src.financialagent.logger import get_logger
+
+logger=get_logger(__name__)
 
 app=FastAPI(
     title="AI Financial Analyst",
@@ -16,6 +19,7 @@ def health():
 
 @app.post("/analyse",response_model=AnalyseResponse)
 def analyse(request: AnalyseRequest):
+    logger.info(f"Analysis requested for ticker: {request.ticker}")
     try:
         os.environ["TAVILY_API_KEY"]=request.tavily_api_key
 
@@ -40,14 +44,20 @@ def analyse(request: AnalyseRequest):
         }
 
         result=graph.invoke(initial_state)
+        logger.info(f"Analysis complete for {request.ticker}")
+
 
         return AnalyseResponse(
             ticker=request.ticker.upper(),
             report=result["report"],
-            sentiment=result["sentiment"]
+            sentiment=result["sentiment"],
+            price_data=result["price_data"],
+            analysis=result["analysis"]
         )
 
     except ValueError as e:
+        logger.error(f"Validation error for {request.ticker}: {e}")
         raise HTTPException(status_code=400,detail=str(e))
     except Exception as e:
+        logger.error(f"Unexpected error for {request.ticker}: {e}")
         raise HTTPException(status_code=500,detail=str(e))

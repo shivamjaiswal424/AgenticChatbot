@@ -1,11 +1,15 @@
 from langchain_core.messages import SystemMessage,HumanMessage
 from src.financialagent.state.state import State
+from src.financialagent.logger import get_logger
+
+logger = get_logger(__name__)
 
 class SentimentNode:
     def __init__(self,llm):
         self.llm=llm
 
     def process(self,state:State) -> dict:
+        logger.info("Running sentiment analysis")
         news=state["news"]
         news_text="\n\n".join([
             f"Title : {item.get('title','')}\n Content: {item.get('content','')}" for item in news
@@ -20,4 +24,5 @@ class SentimentNode:
 
         response=self.llm.invoke(messages)
         state["sentiment"]=response.content.strip()
+        logger.info(f"Sentiment result: {state['sentiment']}")
         return state

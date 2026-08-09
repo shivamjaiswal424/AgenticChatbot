@@ -12,3 +12,5 @@ fastapi
 uvicorn
 requests
 tenacity
+pytest
+plotly
