@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 import requests
 import yfinance as yf
@@ -7,6 +8,7 @@ from src.financialagent.ui.streamlitui.loadui import LoadStreamlitUI
 
 
 def load_financial_agent_app():
+    BACKEND_URL = os.environ.get("BACKEND_URL", "http://localhost:8000")
     ui=LoadStreamlitUI()
     user_input=ui.load_streamlit_ui()
 
@@ -27,13 +29,14 @@ def load_financial_agent_app():
             "selected_groq_model":user_input.get("selected_groq_model",""),
             "tavily_api_key": user_input.get("TAVILY_API_KEY","")
         }
+        
         try:
             with st.spinner(f"Analysing {ticker}..."):
-                response=requests.post(
-                    "http://localhost:8000/analyse",
-                    json=payload,
-                    timeout=120
-                )
+                response = requests.post(
+                f"{BACKEND_URL}/analyse",
+                json=payload,
+                timeout=120
+            )
 
             if response.status_code == 200:
                 result = response.json()
