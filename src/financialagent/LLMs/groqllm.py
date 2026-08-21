@@ -1,5 +1,4 @@
 import os
-import streamlit as st
 from langchain_groq import ChatGroq
 
 class GroqLLM:
@@ -7,16 +6,20 @@ class GroqLLM:
         self.user_controls_input=user_controls_input
 
     def get_llm_model(self):
+        groq_api_key=self.user_controls_input.get("GROQ_API_KEY","").strip()
+        selected_groq_model=self.user_controls_input.get("selected_groq_model","").strip()
+
+        if not groq_api_key:
+            raise ValueError("Groq API key is missing. Please enter it in the sidebar.")
+
         try:
-            groq_api_key=self.user_controls_input["GROQ_API_KEY"]
-            selected_groq_model=self.user_controls_input["selected_groq_model"]
-            if groq_api_key=='' and os.environ["GROQ_API_KEY"]=='':
-                st.error("Please Enter the Groq API KEY")
-
-            llm=ChatGroq(api_key=groq_api_key,model=selected_groq_model, temperature=0)
-
+            llm=ChatGroq(api_key=groq_api_key, model=selected_groq_model, temperature=0)
+            llm.invoke("test")
         except Exception as e:
-            raise ValueError(f"Error Occurred with Exception: {e}")
+            error=str(e).lower()
+            if "invalid api key" in error or "authentication" in error or "401" in error:
+                raise ValueError("Invalid Groq API key. Please check and re-enter it in the sidebar.")
+            raise ValueError(f"Failed to initialise Groq model: {e}")
         return llm
 
         

@@ -14,10 +14,10 @@ class AnalyseRequest(BaseModel):
         v=v.strip().upper()
         if not v:
             raise ValueError("Ticker cannot be empty.")
-        if len(v)>10:
-            raise ValueError("Ticker too long. Use a valid stack symbol like AAPL.")
-        if not v.isalpha():
-            raise ValueError("Ticker must contain letters only.")
+        if len(v)>15:
+            raise ValueError("Ticker too long. Use a valid symbol like AAPL or RELIANCE.NS.")
+        if not v.replace(".", "").isalpha():
+            raise ValueError("Ticker must contain letters only, with an optional exchange suffix like .NS or .BO.")
         return v
 
     @field_validator("groq_api_key","tavily_api_key")

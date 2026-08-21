@@ -7,6 +7,8 @@ from src.financialagent.logger import get_logger
 
 logger=get_logger(__name__)
 
+EXCHANGE_SUFFIXES = ["", ".NS", ".BO"]
+
 
 class DataFetcherNode:
     def __init__(self,llm):
@@ -17,25 +19,32 @@ class DataFetcherNode:
     wait=wait_fixed(2),
     retry=retry_if_not_exception_type(ValueError)
     )
-    def fetch_stock_info(self,ticker:str)-> dict:
-        logger.info(f"Fetching stock data for {ticker}")
-        stock=yf.Ticker(ticker)
-        info=stock.info
-        if not info.get("currentPrice"):
-            raise ValueError(f"'{ticker}' is not a valid stock ticker. Try 'AMZN' instead of 'AMAZON'.")
+    def fetch_stock_info(self, ticker: str) -> tuple:
+        """Try the ticker on US, NSE (.NS), and BSE (.BO). Returns (resolved_ticker, info)."""
+        # If user already typed an exchange suffix (e.g. RELIANCE.NS), try as-is only
+        suffixes = [""] if "." in ticker else EXCHANGE_SUFFIXES
 
-        logger.info(f"Successfully fetched data for {ticker}")
-        return info
+        for suffix in suffixes:
+            resolved = ticker + suffix
+            logger.info(f"Fetching stock data for {resolved}")
+            stock = yf.Ticker(resolved)
+            info = stock.info
+            if info.get("currentPrice"):
+                logger.info(f"Successfully fetched data for {resolved}")
+                return resolved, info
+
+        exchanges = "the entered exchange" if "." in ticker else "US, NSE (.NS), or BSE (.BO)"
+        raise ValueError(
+            f"'{ticker}' was not found on {exchanges}. "
+            "Check the ticker symbol — use 'AMZN' not 'AMAZON', or 'RELIANCE.NS' for NSE."
+        )
 
     def process(self, state: State) -> dict:
         ticker = state["ticker"]
-        
-        info = self.fetch_stock_info(ticker)
-
-        
+        resolved_ticker, info = self.fetch_stock_info(ticker)
 
         state["price_data"] = {
-            "ticker": ticker,
+            "ticker": resolved_ticker,
             "current_price": info.get("currentPrice", "N/A"),
             "market_cap": info.get("marketCap", "N/A"),
             "pe_ratio": info.get("trailingPE", "N/A"),
