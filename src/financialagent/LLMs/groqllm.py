@@ -19,6 +19,8 @@ class GroqLLM:
             error=str(e).lower()
             if "invalid api key" in error or "authentication" in error or "401" in error:
                 raise ValueError("Invalid Groq API key. Please check and re-enter it in the sidebar.")
+            if "model_not_found" in error or "does not exist" in error or "404" in error:
+                raise ValueError(f"Model '{selected_groq_model}' not found on Groq. Try 'llama-3.3-70b-versatile' or check console.groq.com for available models.")
             raise ValueError(f"Failed to initialise Groq model: {e}")
         return llm
 

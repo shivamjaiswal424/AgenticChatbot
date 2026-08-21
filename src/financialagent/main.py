@@ -84,8 +84,12 @@ def load_financial_agent_app():
                 # Price trend chart
                 st.subheader("6 Month Price History")
 
-                history = yf.Ticker(ticker).history(period="6mo")
-                if not history.empty:
+                try:
+                    history = yf.Ticker(ticker).history(period="6mo")
+                except Exception:
+                    history = None
+
+                if history is not None and not history.empty:
                     fig = go.Figure()
                     fig.add_trace(go.Scatter(
                         x=history.index,
@@ -108,6 +112,8 @@ def load_financial_agent_app():
                     fig.update_traces(line=dict(color="#7c3aed", width=2.5))
 
                     st.plotly_chart(fig, use_container_width=True)
+                else:
+                    st.info("Price chart unavailable (Yahoo Finance rate limit on this server). The analysis report below is complete.")
 
                 st.write("")
 
